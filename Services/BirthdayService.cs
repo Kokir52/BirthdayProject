@@ -23,10 +23,9 @@ namespace RodjendaniProjekat.Services
 
         public async Task<IEnumerable<Birthday>> Add(Birthday p)
         {
-            _context.Birthdays.Add(p);
-            _context.SaveChanges();
-            var birthdays = await _context.Birthdays.ToListAsync();
-            return _context.Birthdays;
+            await _context.Birthdays.AddAsync(p);
+            await _context.SaveChangesAsync();
+            return (IEnumerable<Birthday>)p;
         }
 
         public async Task<bool> Remove(string name)
@@ -35,8 +34,7 @@ namespace RodjendaniProjekat.Services
             if (person == null) return false;
 
             _context.Birthdays.Remove(person);
-            _context.SaveChanges();
-            var birthdays = await _context.Birthdays.ToListAsync();
+            await _context.SaveChangesAsync();
             return true;
         }
 
