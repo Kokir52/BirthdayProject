@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RodjendaniProjekat.APIRecords;
@@ -66,7 +67,9 @@ namespace RodjendaniProjekat.Controllers
             var people = await _getSortedHandler.Handle(new GetSortedRequest());
             if (people == null)
                 return NotFound();
-            return Ok(people.GetBirthdays());
+
+            var dto = _mapper.Map<IEnumerable<BirthdayResponseDto>>(response.GetBirthdays());
+            return Ok(dto);
         }
 
         [HttpGet("getAll")]
@@ -75,7 +78,8 @@ namespace RodjendaniProjekat.Controllers
             var people = await _getAllHandler.Handle(new getAllRequest());
             if (people == null)
                 return NotFound();
-            return Ok(people.GetBirthdays());
+            var dto = _mapper.Map<IEnumerable<BirthdayResponseDto>>(people.GetBirthdays());
+            return Ok(dto);
         }
 
         [HttpGet("get/{name}")]
@@ -92,7 +96,7 @@ namespace RodjendaniProjekat.Controllers
             {
                 throw new BirthdayNotFoundException(name);
             }
-            return Ok(birthday);
+            return Ok(_mapper.Map<BirthdayResponseDto>(birthday));
         }
 
         [HttpPost("add")]
@@ -103,12 +107,10 @@ namespace RodjendaniProjekat.Controllers
                 return BadRequest("Name cannot be empty.");
             }
 
-            var birthday = _mapper.Map<Birthday>(dto);
-
-            var request = new addBirthdayRequest(birthday);
+            var request = new addBirthdayRequest(_mapper.Map<Birthday>(dto));
             var response = await _addBirthdayHandler.Handle(request);
 
-            return Ok(response.getResponseCode());
+            return Ok(_mapper.Map<BirthdayResponseDto>(response.getResponseCode()));
         }
 
         [HttpDelete("remove/{name}")]
@@ -131,16 +133,16 @@ namespace RodjendaniProjekat.Controllers
         }
 
         [HttpPut("edit/{name}")]
-        public async Task<ActionResult<IEnumerable<Birthday>>> EditBirthday([FromBody] Birthday birthday)
+        public async Task<ActionResult<IEnumerable<Birthday>>> EditBirthday([FromBody] BirthdayDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(birthday.FirstName) || string.IsNullOrWhiteSpace(birthday.LastName))
+            if (string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
             {
                 return BadRequest("Name cannot be empty.");
             }
-            editRequest request = new editRequest(birthday);
+            editRequest request = new editRequest(_mapper.Map<Birthday>(dto));
             editResponse response = await _editHandler.Handle(request);
 
-            return Ok(birthday);
+            return Ok(_mapper.Map<BirthdayResponseDto>(response.getBirthday().First()));
         }
 
         
